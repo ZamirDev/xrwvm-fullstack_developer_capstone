@@ -7,12 +7,13 @@
 # from django.contrib.auth import logout
 # from django.contrib import messages
 # from datetime import datetime
-
+from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 # from .populate import initiate
 
 
@@ -25,19 +26,25 @@ logger = logging.getLogger(__name__)
 # Create a `login_request` view to handle sign in request
 @csrf_exempt
 def login_user(request):
-    # Get username and password from request.POST dictionary
-    data = json.loads(request.body)
-    username = data['userName']
-    password = data['password']
-    # Try to check if provide credential can be authenticated
-    user = authenticate(username=username, password=password)
-    data = {"userName": username}
-    if user is not None:
-        # If user is valid, call login method to login current user
-        login(request, user)
-        data = {"userName": username, "status": "Authenticated"}
-    return JsonResponse(data)
+    if request.method == "POST":
+        data = json.loads(request.body)
+        username = data['userName']
+        password = data['password']
 
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                "userName": username,
+                "status": "Authenticated"
+            })
+        else:
+            return JsonResponse({
+                "userName": username,
+                "status": "Failed"
+            })
+    return JsonResponse({"status": "Invalid request"})
 # Create a `logout_request` view to handle sign out request
 # def logout_request(request):
 # ...
@@ -63,3 +70,38 @@ def login_user(request):
 # Create a `add_review` view to submit a review
 # def add_review(request):
 # ...
+@csrf_exempt
+def logout_user(request):
+    logout(request)  # End session
+    data = {"userName": ""}
+    return JsonResponse(data)
+
+    
+@csrf_exempt
+def register_user(request):
+
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        username = data.get("userName")
+        password = data.get("password")
+        email = data.get("email")
+        first_name = data.get("firstName")
+        last_name = data.get("lastName")
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"error": "Already Registered"})
+
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            email=email,
+            first_name=first_name,
+            last_name=last_name
+        )
+
+        login(request, user)
+
+        return JsonResponse({"status": True, "userName": username})
+
+    return JsonResponse({"status": False})
