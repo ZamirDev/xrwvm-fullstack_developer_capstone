@@ -1,22 +1,36 @@
-# Uncomment the imports below before you add the function code
-# import requests
 import os
-from dotenv import load_dotenv
+import requests
+import json
 
-load_dotenv()
+backend_url = os.getenv('backend_url', 'http://localhost:3030')
+sentiment_analyzer_url = os.getenv('https://sentianalyzer.28zsfifyh4is.us-south.codeengine.appdomain.cloud/', 'http://localhost:5050/')
 
-backend_url = os.getenv(
-    'backend_url', default="http://localhost:3030")
-sentiment_analyzer_url = os.getenv(
-    'sentiment_analyzer_url',
-    default="http://localhost:5050/")
+def get_request(endpoint, **kwargs):
+    params = ""
 
-# def get_request(endpoint, **kwargs):
-# Add code for get requests to back end
+    if kwargs:
+        for key, value in kwargs.items():
+            params += f"{key}={value}&"
 
-# def analyze_review_sentiments(text):
-# request_url = sentiment_analyzer_url+"analyze/"+text
-# Add code for retrieving sentiments
+    request_url = backend_url + endpoint
 
-# def post_review(data_dict):
-# Add code for posting review
+    if params:
+        request_url += "?" + params
+
+    print("GET from:", request_url)
+
+    try:
+        response = requests.get(request_url)
+        return response.json()
+    except Exception as e:
+        print("Network exception:", e)
+        return None
+
+
+def analyze_review_sentiments(text):
+    try:
+        response = requests.get(sentiment_analyzer_url + "analyze/" + text)
+        return response.json()
+    except Exception as e:
+        print("Sentiment error:", e)
+        return {"sentiment": "neutral"}

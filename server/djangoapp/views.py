@@ -8,6 +8,9 @@ from .models import CarMake, CarModel
 from django.http import JsonResponse
 from .models import CarMake, CarModel
 from .populate import initiate
+from .restapis import get_request
+from django.http import JsonResponse
+from .restapis import get_request, analyze_review_sentiments
 
 logger = logging.getLogger(__name__)
 def get_cars(request):
@@ -94,3 +97,52 @@ def register_user(request):
         return JsonResponse({"status": True, "userName": username})
 
     return JsonResponse({"status": False})
+    from django.http import JsonResponse
+
+
+def get_dealerships(request, state="All"):
+
+    dealerships = [
+        {
+            "id": 1,
+            "name": "Honda Dealer",
+            "state": "CA",
+            "city": "San Francisco"
+        },
+        {
+            "id": 2,
+            "name": "Toyota Dealer",
+            "state": "TX",
+            "city": "Dallas"
+        }
+    ]
+
+    return JsonResponse({"status": 200, "dealers": dealerships})
+
+def get_dealer_details(request, dealer_id):
+    if dealer_id:
+        endpoint = f"/fetchDealer/{dealer_id}"
+        dealer = get_request(endpoint)
+
+        if dealer is None:
+            dealer = {}
+
+        return JsonResponse({"status": 200, "dealer": dealer})
+
+    return JsonResponse({"status": 400, "message": "Bad Request"})
+
+def get_dealer_reviews(request, dealer_id):
+    if dealer_id:
+        endpoint = f"/fetchReviews/dealer/{dealer_id}"
+        reviews = get_request(endpoint)
+
+        if reviews is None:
+            reviews = []
+
+        for review in reviews:
+            response = analyze_review_sentiments(review['review'])
+            review['sentiment'] = response.get('sentiment', 'neutral')
+
+        return JsonResponse({"status": 200, "reviews": reviews})
+
+    return JsonResponse({"status": 400, "message": "Bad Request"})
