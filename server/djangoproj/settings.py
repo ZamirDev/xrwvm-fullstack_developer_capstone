@@ -40,7 +40,9 @@ CSRF_TRUSTED_ORIGINS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai",
+]
 # Application definition
 
 INSTALLED_APPS = [
